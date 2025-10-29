@@ -1,5 +1,7 @@
 "use client"; // make this component client-side
 
+import { Weather } from "./types/weather";
+
 import { useState, useEffect } from "react";
 import { fetchWeather } from "../lib/fetchWeather";
 
@@ -14,6 +16,7 @@ export default function Home() {
 	const [username, setUsername] = useState<string | null>(null);
 
 	const [isCelsius, setIsCelsius] = useState(true);
+	const [favoriteWeathers, setFavoriteWeathers] = useState<Weather[]>([]);
 
 	// load username and favorites from localStorage
 	useEffect(() => {
@@ -22,6 +25,19 @@ export default function Home() {
 		if (savedUser) setUsername(savedUser);
 		if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
 	}, []);
+
+	useEffect(() => {
+		// fetch weather for each favorite city
+		favoriteWeathers.length = 0; // clear before updating
+		favorites.forEach(async (favCity) => {
+			try {
+				const data = await fetchWeather(favCity);
+				setFavoriteWeathers((prev) => [...prev, data]);
+			} catch (err) {
+				console.error("Failed to fetch favorite city:", favCity, err);
+			}
+		});
+	}, [favorites]);
 
 	// search function
 	const handleSearch = async () => {
@@ -128,6 +144,30 @@ export default function Home() {
 			setIsCelsius(true);
 		}
 	}
+
+	const renderWeatherCard = (weather: Weather) => (
+		<div key={weather.location.name} className="bg-white shadow rounded p-4 w-64 flex flex-col items-center">
+			<h3 className="text-xl font-bold">
+				{weather.location.name}, {weather.location.country}
+			</h3>
+			<p className="text-sm mb-1">Local time: {weather.location.localtime}</p>
+			<img src={weather.current.condition.icon} alt={weather.current.condition.text} />
+			<p className="font-medium">{weather.current.condition.text}</p>
+			<p className="text-lg font-semibold">{isCelsius ? `${weather.current.temp_c}°C (Feels like ${weather.current.feelslike_c}°C)` : `${weather.current.temp_f}°F (Feels like ${weather.current.feelslike_f}°F)`}</p>
+			<p>Humidity: {weather.current.humidity}%</p>
+			<p>
+				Wind: {weather.current.wind_kph} km/h {weather.current.wind_dir}
+			</p>
+			<p>Visibility: {weather.current.vis_km} km</p>
+			<p>Pressure: {weather.current.pressure_mb} mb</p>
+			{favorites.includes(weather.location.name) && (
+				<button onClick={() => handleRemoveFavorite(weather.location.name)} className="mt-2 bg-red-500 text-white px-3 py-1 rounded">
+					Remove
+				</button>
+			)}
+		</div>
+	);
+
 	return (
 		<div>
 			<h1>Get real-time weather conditions of any city worldwide</h1>
@@ -166,21 +206,8 @@ export default function Home() {
 			)}
 
 			{/* favorites list */}
-			{favorites.length > 0 && (
-				<div className="mt-6">
-					<h3 className="text-lg font-semibold">Your Favorites</h3>
-					<ul>
-						{favorites.map((fav) => (
-							<li key={fav} className="flex items-center justify-between">
-								<span>{fav}</span>
-								<button onClick={() => handleRemoveFavorite(fav)} className="ml-2 bg-red-500 text-white px-2 py-1 rounded text-sm">
-									Remove
-								</button>
-							</li>
-						))}
-					</ul>
-				</div>
-			)}
+			<h2 className="text-2xl font-bold mb-4">Favorites</h2>
+			<section className="flex flex-wrap gap-6">{favoriteWeathers.length > 0 ? favoriteWeathers.map(renderWeatherCard) : <p>No favorites yet.</p>}</section>
 		</div>
 	);
 }
