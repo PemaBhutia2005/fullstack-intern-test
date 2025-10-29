@@ -93,6 +93,33 @@ export default function Home() {
 		}
 	};
 
+	// remove a city from favorites
+	const handleRemoveFavorite = async (city: string) => {
+		// remove locally first
+		const updatedFavorites = favorites.filter((fav) => fav !== city);
+		setFavorites(updatedFavorites);
+		localStorage.setItem("skynowFavorites", JSON.stringify(updatedFavorites));
+
+		// if user is logged in, also remove from MongoDB
+		if (username) {
+			try {
+				const res = await fetch("/api/favorites", {
+					method: "DELETE",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ username, city }),
+				});
+
+				const data = await res.json();
+				if (!res.ok) {
+					setError(data.error || "Failed to remove favorite from database.");
+				}
+			} catch (err) {
+				console.error(err);
+				setError("Failed to connect to server.");
+			}
+		}
+	};
+
 	//toggle between Celsius and Fahrenheit
 	function toggleUnit() {
 		if (isCelsius) {
@@ -144,7 +171,12 @@ export default function Home() {
 					<h3 className="text-lg font-semibold">Your Favorites</h3>
 					<ul>
 						{favorites.map((fav) => (
-							<li key={fav}>{fav}</li>
+							<li key={fav} className="flex items-center justify-between">
+								<span>{fav}</span>
+								<button onClick={() => handleRemoveFavorite(fav)} className="ml-2 bg-red-500 text-white px-2 py-1 rounded text-sm">
+									Remove
+								</button>
+							</li>
 						))}
 					</ul>
 				</div>
