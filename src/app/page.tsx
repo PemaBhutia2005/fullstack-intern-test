@@ -13,6 +13,8 @@ export default function Home() {
 	const [favorites, setFavorites] = useState<string[]>([]);
 	const [username, setUsername] = useState<string | null>(null);
 
+	const [isCelsius, setIsCelsius] = useState(true);
+
 	// load username and favorites from localStorage
 	useEffect(() => {
 		const savedUser = localStorage.getItem("skynowUsername");
@@ -91,11 +93,24 @@ export default function Home() {
 		}
 	};
 
+	//toggle between Celsius and Fahrenheit
+	function toggleUnit() {
+		if (isCelsius) {
+			setIsCelsius(false);
+		} else {
+			setIsCelsius(true);
+		}
+	}
 	return (
 		<div>
 			<h1>Get real-time weather conditions of any city worldwide</h1>
 			<input type="text" placeholder="Enter a city..." value={city} onChange={(e) => setCity(e.target.value)} />
 			<button onClick={handleSearch}>Search</button>
+
+			{/* temperature unit toggle */}
+			<button onClick={toggleUnit} className="ml-3 bg-gray-200 px-2 py-1 rounded text-sm">
+				Switch to {isCelsius ? "°F" : "°C"}
+			</button>
 
 			{/* conditional renderings */}
 			{loading && <p>Loading...</p>}
@@ -108,9 +123,8 @@ export default function Home() {
 					<p>Local time: {weather.location.localtime}</p>
 					<img src={weather.current.condition.icon} alt={weather.current.condition.text} />
 					<p>{weather.current.condition.text}</p>
-					<p>
-						{weather.current.temp_c}°C (Feels like {weather.current.feelslike_c}°C)
-					</p>
+					{/* temperature display changes depending on toggle */}
+					<p>{isCelsius ? `${weather.current.temp_c}°C (Feels like ${weather.current.feelslike_c}°C)` : `${weather.current.temp_f}°F (Feels like ${weather.current.feelslike_f}°F)`}</p>
 					<p>Humidity: {weather.current.humidity}%</p>
 					<p>
 						Wind: {weather.current.wind_kph} km/h {weather.current.wind_dir}
