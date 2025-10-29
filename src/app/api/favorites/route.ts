@@ -35,6 +35,7 @@ export async function GET(request: Request) {
 
 // add favorite
 export async function POST(request: Request) {
+	console.log("/api/favorites called");
 	const body = await request.json();
 	const username = body.username;
 	const city = body.city;
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
 	if (!username || !city) {
 		return NextResponse.json({ error: "Username and city required" }, { status: 400 });
 	}
+
+	console.log("data:", username, city);
 
 	if (!uri) return NextResponse.json({ error: "No URI found" }, { status: 500 });
 

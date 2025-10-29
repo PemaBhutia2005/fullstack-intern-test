@@ -13,6 +13,7 @@ export default function Home() {
 	const [favorites, setFavorites] = useState<string[]>([]);
 	const [username, setUsername] = useState<string | null>(null);
 
+	// load username and favorites from localStorage
 	useEffect(() => {
 		const savedUser = localStorage.getItem("skynowUsername");
 		const savedFavorites = localStorage.getItem("skynowFavorites");
@@ -37,22 +38,56 @@ export default function Home() {
 		}
 	};
 
-	//add to favorites function
+	//add city to favorites function
 	const handleAddFavorite = async () => {
-		if (!city) return;
-		if (favorites.includes(city)) return alert("Already in favorites");
+		if (!weather || !weather.location?.name) {
+			setError("No city to add.");
+			return;
+		}
 
-		const updated = [...favorites, city];
-		setFavorites(updated);
-		localStorage.setItem("skynowFavorites", JSON.stringify(updated));
+		const cityName = weather.location.name;
 
-		// if logged in, also save to MongoDB
-		if (username) {
-			await fetch("/api/favorites", {
+		// if already favorited, do nothing
+		if (favorites.includes(cityName)) {
+			setError(`${cityName} is already in your favorites.`);
+			return;
+		}
+
+		// update frontend immediately
+		setFavorites((prev) => {
+			const updated = [...prev, cityName];
+			localStorage.setItem("skynowFavorites", JSON.stringify(updated));
+			return updated;
+		});
+
+		// if user not logged in
+		if (!username) {
+			setError("Log in to save your favorites permanently.");
+			// still store locally
+			const localFavs = JSON.parse(localStorage.getItem("skynowFavorites") || "[]");
+			if (!localFavs.includes(city)) {
+				localFavs.push(city);
+				localStorage.setItem("skynowFavorites", JSON.stringify(localFavs));
+			}
+			return;
+		}
+		// if logged in, save to MongoDB
+		try {
+			const res = await fetch("/api/favorites", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ username, city }),
 			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				setError(data.error || "Failed to add favorite.");
+				return;
+			}
+		} catch (err) {
+			console.error(err);
+			setError("Failed to connect to server.");
 		}
 	};
 
