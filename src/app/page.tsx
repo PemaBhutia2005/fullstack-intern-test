@@ -1,6 +1,6 @@
 "use client"; // make this component client-side
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchWeather } from "../lib/fetchWeather";
 
 export default function Home() {
@@ -9,6 +9,16 @@ export default function Home() {
 
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
+
+	const [favorites, setFavorites] = useState<string[]>([]);
+	const [username, setUsername] = useState<string | null>(null);
+
+	useEffect(() => {
+		const savedUser = localStorage.getItem("skynowUsername");
+		const savedFavorites = localStorage.getItem("skynowFavorites");
+		if (savedUser) setUsername(savedUser);
+		if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
+	}, []);
 
 	// search function
 	const handleSearch = async () => {
@@ -24,6 +34,25 @@ export default function Home() {
 			setError("We failed to fetch weather data.");
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	//add to favorites function
+	const handleAddFavorite = async () => {
+		if (!city) return;
+		if (favorites.includes(city)) return alert("Already in favorites");
+
+		const updated = [...favorites, city];
+		setFavorites(updated);
+		localStorage.setItem("skynowFavorites", JSON.stringify(updated));
+
+		// if logged in, also save to MongoDB
+		if (username) {
+			await fetch("/api/favorites", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, city }),
+			});
 		}
 	};
 
@@ -53,6 +82,22 @@ export default function Home() {
 					</p>
 					<p>Visibility: {weather.current.vis_km} km</p>
 					<p>Pressure: {weather.current.pressure_mb} mb</p>
+
+					<button onClick={handleAddFavorite} className="mt-2 bg-yellow-400 px-3 py-1 rounded">
+						Add to Favorites
+					</button>
+				</div>
+			)}
+
+			{/* favorites list */}
+			{favorites.length > 0 && (
+				<div className="mt-6">
+					<h3 className="text-lg font-semibold">Your Favorites</h3>
+					<ul>
+						{favorites.map((fav) => (
+							<li key={fav}>{fav}</li>
+						))}
+					</ul>
 				</div>
 			)}
 		</div>
