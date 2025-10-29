@@ -1,7 +1,6 @@
 "use client"; // make this component client-side
 
 import { Weather } from "./types/weather";
-
 import { useState, useEffect } from "react";
 import { fetchWeather } from "../lib/fetchWeather";
 
@@ -169,37 +168,52 @@ export default function Home() {
 	);
 
 	return (
-		<div>
-			<h1>Get real-time weather conditions of any city worldwide</h1>
-			<input type="text" placeholder="Enter a city..." value={city} onChange={(e) => setCity(e.target.value)} />
-			<button onClick={handleSearch}>Search</button>
+		<div className="min-h-screen to-white flex flex-col items-center px-6 py-12">
+			<header className="text-center max-w-2xl mb-10">
+				<h1 className="text-4xl md:text-5xl font-bold text-sky-700 mb-4">Get real-time weather conditions of any city worldwide</h1>
+
+				<div className="flex items-center justify-center gap-3 w-full">
+					<input
+						type="text"
+						placeholder="Enter a city..."
+						className="w-full md:w-2/3 px-5 py-3 border border-gray-300 rounded-2xl text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+						value={city}
+						onChange={(e) => setCity(e.target.value)}
+					/>
+					<button className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-2xl font-semibold shadow transition" onClick={handleSearch}>
+						Search
+					</button>
+				</div>
+			</header>
 
 			{/* temperature unit toggle */}
-			<button onClick={toggleUnit} className="ml-3 bg-gray-200 px-2 py-1 rounded text-sm">
+			<button onClick={toggleUnit} className="mb-8 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-full text-sm text-gray-700 transition">
 				Switch to {isCelsius ? "°F" : "°C"}
 			</button>
 
 			{/* conditional renderings */}
-			{loading && <p>Loading...</p>}
-			{error && <p className="text-red-500">{error}</p>}
+			{loading && <p className="text-gray-600 text-lg">Loading...</p>}
+			{error && <p className="text-red-500  mb-4">{error}</p>}
 			{weather && (
-				<div>
-					<h2>
+				<div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md text-center mb-12 transition">
+					<h2 className="text-2xl font-bold mb-1">
 						{weather.location.name}, {weather.location.country}
 					</h2>
-					<p>Local time: {weather.location.localtime}</p>
-					<img src={weather.current.condition.icon} alt={weather.current.condition.text} />
-					<p>{weather.current.condition.text}</p>
+					<p className="text-gray-500 mb-3">Local time: {weather.location.localtime}</p>
+					<img src={weather.current.condition.icon} alt={weather.current.condition.text} className="mx-auto w-16 h-16" />
+					<p className="text-lg font-medium mb-1">{weather.current.condition.text}</p>
 					{/* temperature display changes depending on toggle */}
-					<p>{isCelsius ? `${weather.current.temp_c}°C (Feels like ${weather.current.feelslike_c}°C)` : `${weather.current.temp_f}°F (Feels like ${weather.current.feelslike_f}°F)`}</p>
-					<p>Humidity: {weather.current.humidity}%</p>
-					<p>
-						Wind: {weather.current.wind_kph} km/h {weather.current.wind_dir}
-					</p>
-					<p>Visibility: {weather.current.vis_km} km</p>
-					<p>Pressure: {weather.current.pressure_mb} mb</p>
+					<p className="text-2xl font-semibold mb-2">{isCelsius ? `${weather.current.temp_c}°C (Feels like ${weather.current.feelslike_c}°C)` : `${weather.current.temp_f}°F (Feels like ${weather.current.feelslike_f}°F)`}</p>
+					<div className="text-sm text-gray-600 space-y-1">
+						<p>Humidity: {weather.current.humidity}%</p>
+						<p>
+							Wind: {weather.current.wind_kph} km/h {weather.current.wind_dir}
+						</p>
+						<p>Visibility: {weather.current.vis_km} km</p>
+						<p>Pressure: {weather.current.pressure_mb} mb</p>
+					</div>
 
-					<button onClick={handleAddFavorite} className="mt-2 bg-yellow-400 px-3 py-1 rounded">
+					<button onClick={handleAddFavorite} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-gray-800 px-4 py-2 rounded-xl font-semibold shadow transition">
 						Add to Favorites
 					</button>
 				</div>
